@@ -1,0 +1,35 @@
+h1 {
+    color:#6b6f6f
+}
+
+body {
+    margin-left: 40%;
+    background-color: #6dbd8b
+}
+h1{
+    margin-left: 3%;
+}
+h2 {
+    color: #d68e00;
+    width: 120px;
+    font-size: 20px;
+    margin-left: 10%;
+    border-top: 5px dashed #1d6332;
+    border-bottom: 5px dashed #1d6332;
+    border-radius: 0%;
+  }
+
+img {
+    margin-left: 5%;
+}
+
+button {
+    width: 100px;
+    height:100px;
+    margin: 1.5em;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #f1c56e;
+    border-radius: 100px;
+    border: 10px dashed #6dbd8b;
+}
