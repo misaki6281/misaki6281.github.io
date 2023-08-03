@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<link rel="stylesheet" href="enshu.css">
+<title>otenki</title>
+</head>
+<body>
+
+<h1>気象情報（降水強度）</h1>
+
+<img src="character.png">
+
+<p>
+  <button id="startButton">気象情報を聞く</button>
+  <button id="stopButton">stop</button>
+</p>
+
+<p>
+<div id="resultOutput"></div>
+<div id="resultOutput_2"></div>
+</p>
+
+
+<script type="text/javascript">
+
+const startButton = document.querySelector('#startButton'); // 開始ボタン
+const stopButton = document.querySelector('#stopButton'); // 停止ボタン
+const resultOutput = document.querySelector('#resultOutput'); // 結果出力エリア
+
+if (!'SpeechSynthesisUtterance' in window) {
+    alert("あなたのブラウザはSpeech Synthesis APIに未対応です。");
+}
+const tts = new SpeechSynthesisUtterance(); // TTSインスタンスを生成
+tts.lang = "ja-JP"; // 言語(日本語)、英語の場合はen-US
+tts.rate = 1.0; // 速度
+tts.pitch = 1.5; // 声の高さ
+tts.volume = 0.9; // 音量
+
+SpeechRecognition = webkitSpeechRecognition || SpeechRecognition;
+if (!'SpeechRecognition' in window) {
+    alert("あなたのブラウザはSpeech Recognition APIに未対応です。");
+}
+
+const asr = new SpeechRecognition(); // ASRインスタンスを生成
+asr.lang = "ja-JP"; // 言語（日本語）
+asr.interimResults = true; // 途中結果出力をオン
+asr.continuous = true; // 継続入力をオン
+
+let output = ''; // 出力
+
+// 認識結果が出力されたときのイベントハンドラ
+asr.onresult = function(event){
+    let transcript = event.results[event.resultIndex][0].transcript; // 結果文字列
+
+    let output_not_final = '';
+    if (event.results[event.resultIndex].isFinal) { // 結果が確定（Final）のとき
+	    asr.abort(); // 音声認識を停止
+        
+        showAddress(transcript);
+
+        output += transcript + " のお天気情報 " + '</br>';
+
+    } else { // 結果がまだ未確定のとき
+        output_not_final = '<span style="color:#ddd;">' + transcript + '</span>';
+    }
+    resultOutput.innerHTML = output + output_not_final;//対話結果の出力
+
+}
+
+// JSONPを実行する関数
+function callJSONP(url, callback) {
+  var target = document.createElement('script');
+  target.charset = 'utf-8';
+  target.src = url;
+  target.onload = callback;
+  document.body.appendChild(target);
+}
+
+// 緯度経度を取得する関数
+function showAddress(query) {
+  var appid1 = 'dj00aiZpPU1tc3VJeXpLZExGaSZzPWNvbnN1bWVyc2VjcmV0Jng9NzY-';
+  var url = "https://map.yahooapis.jp/geocode/V1/geoCoder?appid=" + appid1 + "&query=" + encodeURI(query) + "&output=json&callback=showResult1";
+  callJSONP(url, function() {});
+}
+
+//JSONPの結果として実行される関数
+function showResult1( result ) {
+  if(result.Feature && result.Feature.length > 0){
+    const coordinates = result.Feature[0].Geometry.Coordinates;
+    var appid2 = 'dj00aiZpPU1tc3VJeXpLZExGaSZzPWNvbnN1bWVyc2VjcmV0Jng9NzY-';
+    var url = "https://map.yahooapis.jp/weather/V1/place?appid=" + appid2 + "&coordinates=" + encodeURI(coordinates) + "&output=json&callback=showResult2";
+    callJSONP(url, function() {});
+  } else {
+    answer = "住所が見つかりませんでした。";
+    tts.text = answer;
+    speechSynthesis.speak(tts); // エラーメッセージを音声として読み上げる
+  }
+}
+
+//JSONPの結果として実行される関数
+function showResult2(result) {
+
+  if (result.ResultInfo.Count > 0) {
+    let name = result.Feature[0].Name;
+    let weathers = result.Feature[0].Property.WeatherList.Weather;
+
+    let answer = "1時間後の降水強度は " + parseFloat(weathers[6].Rainfall) + "mmです"; // 合計降水量を小数点以下2桁にフォーマット
+    tts.text = answer;
+
+    let output = "1時間後の降水強度：" + parseFloat(weathers[6].Rainfall) + "mm" + '</br>';
+    // 結果をresultOutputに表示
+    resultOutput_2.innerHTML += output;
+
+
+    // 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+    tts.onend = function(event) {
+        asr.start(); // 音声認識を再開
+      };
+      speechSynthesis.speak(tts); // 合計降水量を音声として読み上げる
+  } else {
+    tts.text = "気象情報が見つかりませんでした。";
+    speechSynthesis.speak(tts);
+  }
+}
+
+// 開始ボタンのイベントハンドラ
+startButton.addEventListener('click', function() {
+    asr.start();
+})
+
+// 停止ボタンのイベントハンドラ
+stopButton.addEventListener('click', function() {
+    asr.abort();
+    asr.stop();
+})
+
+</script>
+
+<!-- Yahoo!JAPANのAPIを利用したときはクレジット表記が必要 -->
+<p class="credit">
+Web Services by Yahoo! JAPAN （https://developer.yahoo.co.jp/sitemap/）
+</p>
+</body>
+</html>
