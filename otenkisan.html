@@ -129,11 +129,7 @@ function showResultWeather(result) {
     // 結果をresultOutputに表示
     resultOutput_2.innerHTML += output;
 
-    // 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
-    tts.onend = function(event) {
-        asr.start(); // 音声認識を再開
-      };
-      speechSynthesis.speak(tts); // 降水強度を音声として読み上げる
+    speechSynthesis.speak(tts); // 降水強度を音声として読み上げる
   } else {
     tts.text = "気象情報が見つかりませんでした。";
     speechSynthesis.speak(tts);// エラーメッセージを音声として読み上げる
