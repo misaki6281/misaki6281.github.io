@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -13,18 +12,23 @@
 
 <h1>気象情報（降水強度）</h1>
 
+<h2>各地域の1時間後の降水強度を提供します。お住いの地域を教えてください。　</h2>
+<h3>〔例〕「東京都」「堺市」「飛鳥村」</h3>
+<h3>※「気象情報を聞く」ボタンを押して、発言を開始してください。</h3>
+
 <img src="character_neko.png">
 
 <p>
   <button id="startButton">気象情報を聞く</button>
-  <button id="stopButton">stop</button>
+  <button id="stopButton">止める</button>
 </p>
 
 <p>
-<div id="resultOutput"></div>
-<div id="resultOutput_2"></div>
+  <div class="result-container">
+    <div id="resultOutput"></div>
+    <div id="resultOutput_2"></div>
+  </div>
 </p>
-
 
 <script type="text/javascript">
 
@@ -49,27 +53,28 @@ if (!'SpeechRecognition' in window) {
 const asr = new SpeechRecognition(); // ASRインスタンスを生成
 asr.lang = "ja-JP"; // 言語（日本語）
 asr.interimResults = true; // 途中結果出力をオン
-asr.continuous = true; // 継続入力をオン
+asr.continuous = false; // 継続入力をオフ
 
 let output = ''; // 出力
 
+
 // 認識結果が出力されたときのイベントハンドラ
 asr.onresult = function(event){
+
     let transcript = event.results[event.resultIndex][0].transcript; // 結果文字列
 
     let output_not_final = '';
     if (event.results[event.resultIndex].isFinal) { // 結果が確定（Final）のとき
 	    asr.abort(); // 音声認識を停止
         
-        showAddress(transcript);
+      showAddress(transcript);
 
-        output += transcript + " の気象情報 " + '</br>';
+      output += transcript + " の気象情報 " + '</br>';
 
     } else { // 結果がまだ未確定のとき
         output_not_final = '<span style="color:#ddd;">' + transcript + '</span>';
     }
-    resultOutput.innerHTML = output + output_not_final;//対話結果の出力
-
+    resultOutput.innerHTML = output + output_not_final;//発声結果の出力
 }
 
 // JSONPを実行する関数
@@ -84,17 +89,17 @@ function callJSONP(url, callback) {
 // 緯度経度を取得する関数
 function showAddress(query) {
   var appid1 = 'dj00aiZpPU1tc3VJeXpLZExGaSZzPWNvbnN1bWVyc2VjcmV0Jng9NzY-';
-  var url = "https://map.yahooapis.jp/geocode/V1/geoCoder?appid=" + appid1 + "&query=" + encodeURI(query) + "&output=json&callback=showResult1";
-  callJSONP(url, function() {});
+  var url = "https://map.yahooapis.jp/geocode/V1/geoCoder?appid=" + appid1 + "&query=" + encodeURI(query) + "&output=json&callback=showResultAddress";
+  callJSONP(url);
 }
 
 //JSONPの結果として実行される関数
-function showResult1( result ) {
+function showResultAddress(result) {
   if(result.Feature && result.Feature.length > 0){
     const coordinates = result.Feature[0].Geometry.Coordinates;
     var appid2 = 'dj00aiZpPU1tc3VJeXpLZExGaSZzPWNvbnN1bWVyc2VjcmV0Jng9NzY-';
-    var url = "https://map.yahooapis.jp/weather/V1/place?appid=" + appid2 + "&coordinates=" + encodeURI(coordinates) + "&output=json&callback=showResult2";
-    callJSONP(url, function() {});
+    var url = "https://map.yahooapis.jp/weather/V1/place?appid=" + appid2 + "&coordinates=" + encodeURI(coordinates) + "&output=json&callback=showResultWeather";
+    callJSONP(url);
   } else {
     answer = "住所が見つかりませんでした。";
     tts.text = answer;
@@ -103,28 +108,35 @@ function showResult1( result ) {
 }
 
 //JSONPの結果として実行される関数
-function showResult2(result) {
-
+function showResultWeather(result) {
   if (result.ResultInfo.Count > 0) {
     let name = result.Feature[0].Name;
     let weathers = result.Feature[0].Property.WeatherList.Weather;
 
-    let answer = "1時間後の降水強度は " + parseFloat(weathers[6].Rainfall) + "mmです"; // 合計降水量を小数点以下2桁にフォーマット
+    let answer = "1時間後の降水強度は " + parseFloat(weathers[6].Rainfall) + "mmです。";
+
+    if(parseFloat(weathers[6].Rainfall) == 0.0) {
+      answer += "雨は降らないでしょう。";
+    } else if(parseFloat(weathers[6].Rainfall) < 10.0) {
+      answer += "小雨が降る可能性があります。";
+    } else {
+      answer += "強い雨が降る可能性があります。";
+    }
+
     tts.text = answer;
 
     let output = "1時間後の降水強度：" + parseFloat(weathers[6].Rainfall) + "mm" + '</br>';
     // 結果をresultOutputに表示
     resultOutput_2.innerHTML += output;
 
-
     // 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
     tts.onend = function(event) {
         asr.start(); // 音声認識を再開
       };
-      speechSynthesis.speak(tts); // 合計降水量を音声として読み上げる
+      speechSynthesis.speak(tts); // 降水強度を音声として読み上げる
   } else {
     tts.text = "気象情報が見つかりませんでした。";
-    speechSynthesis.speak(tts);
+    speechSynthesis.speak(tts);// エラーメッセージを音声として読み上げる
   }
 }
 

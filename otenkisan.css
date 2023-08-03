@@ -8,6 +8,24 @@ body {
 
 h1 {
   text-align: center;
+  font-size:30px;
+  color:rgb(55, 55, 55);
+  padding:5px;
+  margin-bottom:30px;
+  background: -webkit-repeating-linear-gradient(-45deg, #cce7ff, #cce7ff 3px,#e9f4ff 3px, #e9f4ff 7px);
+  background: repeating-linear-gradient(-45deg, #cce7ff, #cce7ff 3px,#e9f4ff 3px, #e9f4ff 7px);
+}
+
+h2 {
+  text-align: center;
+  color: #888;
+  font-size: 15px;
+}
+
+h3 {
+  text-align: center;
+  color: #888;
+  font-size: 12px;
 }
 
 img {
@@ -17,20 +35,37 @@ img {
 
 p {
   text-align: center;
+  margin-top: 5px;
+}
+
+.result-container {
+  display: flex;
+  justify-content: space-around;
   margin-top: 20px;
 }
 
 #resultOutput,
 #resultOutput_2 {
-  margin-top: 20px;
+  flex-basis: 48%;
   text-align: center;
   font-weight: bold;
+  padding: 5px;
+  color:rgb(88, 88, 88);
+}
+
+#resultOutput{
+  margin-left:350px;
+}
+
+#resultOutput_2{
+  margin-right:350px;
 }
 
 button {
   width: 150px;
   height: 150px;
   margin: 1.5em;
+  margin-top:0.5em;
   font-weight: bold;
   color: #ffffff;
   background-color: #5cc9f4;
@@ -39,7 +74,7 @@ button {
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: #ffdd9e;
 }
 
 .credit {
